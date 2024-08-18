@@ -1,7 +1,5 @@
-# colorparser-lib
+# color-converter-lib
 A library to convert and format colors from strings into Minecraft's color codes.
-
-I should have named this color-converter-lib, but I'm too lazy to change it now.
 
 # Usage
 Everything can mostly be found in the parser class.

@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "1.9.23"
+    kotlin("jvm") version "1.9.24"
     id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
@@ -19,7 +19,7 @@ repositories {
 }
 
 dependencies {
-    implementation("dev.idot:colorparser-lib:0.1")
+    implementation("dev.idot:color-converter-lib:0.2") // this is a local dependency
 
     compileOnly("org.bukkit:bukkit:$mcVersion+")
     compileOnly("org.bukkit:craftbukkit:$mcVersion+")
@@ -27,18 +27,20 @@ dependencies {
 }
 
 tasks {
+    // if you're making a spigot plugin
     processResources {
-        filesMatching("plugin.yml") {           // plugin.yml
+        filesMatching("plugin.yml") {
             expand(
                 "displayName" to project.name,  // name: ${displayName}
                 "version" to version            // version: ${version}
             )
         }
     }
+    // this is for shading the dependencies
     shadowJar {
         archiveClassifier.set("")
         dependencies {
-            include(dependency("dev.idot:colorparser-lib"))
+            include(dependency("dev.idot:color-converter-lib"))
             exclude("colors.json")              // If you are not using this file
         }
     }

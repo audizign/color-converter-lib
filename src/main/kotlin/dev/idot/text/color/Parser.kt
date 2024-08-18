@@ -25,24 +25,23 @@ val cmiSeparatorRegex = Regex("\\{#([0-9a-z_]{3,32})<>}", RegexOption.IGNORE_CAS
 
 val cmiGradientRegex = Regex("\\{#([0-9a-z_]{3,32})>}(.*?)\\{#([0-9a-z]{3,32})<}", RegexOption.IGNORE_CASE)
 
-fun codeRegex(c: CharSequence = "&"): Regex = Regex("[$c]([0-9a-fk-or])", RegexOption.IGNORE_CASE)
+fun codeRegex(c: Char = '&'): Regex = Regex("$c([0-9a-fk-or])", RegexOption.IGNORE_CASE)
 
-fun bukkitRegex(c: CharSequence = "&"): Regex = Regex("[$c]x(?:(?:$c[0-9a-f]){3}){1,2}", RegexOption.IGNORE_CASE)
+fun bukkitRegex(c: Char = '&'): Regex = Regex(c + "x(?:(?:$c[0-9a-f]){3}){1,2}", RegexOption.IGNORE_CASE)
 
-fun hexRegex(c: CharSequence = "&") = Regex("[$c]#((?:[0-9a-f]{3}){1,2})", RegexOption.IGNORE_CASE)
+fun hexRegex(c: Char = '&') = Regex("$c#((?:[0-9a-f]{3}){1,2})", RegexOption.IGNORE_CASE)
 
-fun formatRegex(c: CharSequence = "&") = Regex("[$COLOR_CHAR$c][k-or]", RegexOption.IGNORE_CASE)
+fun formatRegex(c: Char = '&') = Regex("[$COLOR_CHAR$c][k-or]", RegexOption.IGNORE_CASE)
 
 fun String.stripFormatCodes(): String = formatRegex().replace(this, "")
 
 fun String.parseColorCodes(colorChar: Char = '&'): String {
-    val colorString = colorChar.toString()
-    return bukkitRegex(colorString).replace(this) {
+    return bukkitRegex(colorChar).replace(this) {
         val hex = it.value
         when (hex.length) {
             8 -> {
                 val result = StringBuilder(14).append(COLOR_CHAR).append("x")
-                for (c in hex.drop(3).replace(colorString, "")) {
+                for (c in hex.drop(3).replace(colorChar.toString(), "")) {
                     result.append(COLOR_CHAR).append(c).append(COLOR_CHAR).append(c)
                 }
                 result
@@ -50,11 +49,11 @@ fun String.parseColorCodes(colorChar: Char = '&'): String {
             14 -> hex.replace(colorChar, COLOR_CHAR)
             else -> hex
         }
-    }.replace(codeRegex(colorString), "$COLOR_CHAR$1")
+    }.replace(codeRegex(colorChar), "$COLOR_CHAR$1")
 }
 
 fun String.parseHexColors(colorChar: Char = '&'): String {
-    return hexRegex(colorChar.toString()).replace(this) {
+    return hexRegex(colorChar).replace(this) {
         val result = StringBuilder(14).append(COLOR_CHAR).append("x")
         val hex = it.groupValues[1]
         for (c in hex) {

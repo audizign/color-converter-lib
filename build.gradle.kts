@@ -9,7 +9,7 @@ plugins {
 
 val mcVersion = "1.16"
 group = "dev.idot"
-version = "0.2"
+version = "0.1"
 
 fun RepositoryHandler.local() {
     maven(file("X:/AppData/Maven/repository"))
@@ -25,7 +25,7 @@ repositories {
 
 dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
-    implementation("com.google.code.gson:gson:2.10.1")
+    implementation("com.google.code.gson:gson:2.10")
 
     compileOnly("org.spigotmc:spigot-api:$mcVersion+")
     //compileOnly("net.md-5:bungeecord-api:$mcVersion+")
