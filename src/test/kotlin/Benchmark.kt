@@ -1,13 +1,12 @@
-import dev.idot.colorparse.api.Colorizer.Companion.parseColorCodes
-import dev.idot.colorparse.api.Colorizer.Companion.compressColors
-import dev.idot.colorparse.api.Colorizer.Companion.parseHexColors
+import dev.idot.text.color.parseColorCodes
+import dev.idot.text.color.compressColors
+import dev.idot.text.color.parseHexColors
 import kotlin.math.pow
 import kotlin.math.roundToInt
 import kotlin.random.Random
 import kotlin.system.measureNanoTime
 import kotlin.test.Test
 
-@Suppress("NAME_SHADOWING")
 class Benchmark {
 /*
     @Test

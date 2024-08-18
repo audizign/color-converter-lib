@@ -1,4 +1,4 @@
-package dev.idot.colorparser.lib
+package dev.idot.text.color
 
 enum class ColorCode(val rgb: Int, val code: Char) {
     BLACK(0x000000, '0'),
@@ -18,7 +18,9 @@ enum class ColorCode(val rgb: Int, val code: Char) {
     YELLOW(0xFFFF55, 'e'),
     WHITE(0xFFFFFF, 'f');
 
-    operator fun invoke(): Color {
-        return Color(rgb)
+    operator fun invoke(): Color = Color(rgb)
+
+    companion object {
+        fun codes(): Array<Char> = ColorCode.entries.map { it.code }.toTypedArray()
     }
 }

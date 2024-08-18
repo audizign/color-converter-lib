@@ -1,7 +1,8 @@
 import dev.idot.text.color.parseAllColors
+import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class Test {
+class Sanity {
 
     private fun parseEquals(input: String, expect: String, message: String? = null) {
         assertEquals(expect, input.parseAllColors(true), message)

@@ -1,4 +1,4 @@
-package dev.idot.colorparser.lib
+package dev.idot.text.color
 
 import com.google.gson.Gson
 

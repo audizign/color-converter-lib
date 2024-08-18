@@ -1,4 +1,4 @@
-package dev.idot.colorparser.lib
+package dev.idot.text.color
 
 class Color {
     companion object {
@@ -18,28 +18,29 @@ class Color {
 
     private var _colorCode: Char? = null
     val colorCode: Char
-        get() = _colorCode ?: run {
+        get() {
+            _colorCode?.let { return it }
             var distance = 0x7FFFFFFF
             var closest = 'f'
-            for (c in ColorCode.entries.map { it.code }) {
+            for (c in ColorCode.codes()) {
                 val d = distance(Color(c))
-
                 if (d >= distance) continue
                 distance = d
                 closest = c.lowercaseChar()
-
-                if (d != 0) continue
-                isExactCode = true
-                break
+                if (d == 0) {
+                    isExactCode = true
+                    break
+                }
             }
             _colorCode = closest
-            closest
+            return closest
         }
+
     var isExactCode: Boolean = false
         private set
-        get() = field || run { // Yes, this is necessary
-            colorCode
-            field
+        get() {
+            if (!field) colorCode
+            return field
         }
 
 
@@ -74,29 +75,21 @@ class Color {
         return r*r + g*g + b*b
     }
 
-    fun hex(): String {
-        return String.format("%06X", rgb).lowercase()
-    }
+    fun hex(): String = "%06X".format(rgb).lowercase()
 
-    fun hexMojang(): String {
-        return buildString {
+    fun hexMojang(): String = buildString {
+        append(COLOR_CHAR)
+        append("x")
+        hex().forEach {
             append(COLOR_CHAR)
-            append("x")
-            hex().forEach {
-                append(COLOR_CHAR)
-                append(it)
-            }
-        }.lowercase()
-    }
-
-    fun hexBukkit(): String {
-        return buildString {
-            append("&x")
-            hex().forEach { append("&$it") }
+            append(it)
         }
+    }.lowercase()
+
+    fun hexBukkit(): String = buildString {
+        append("&x")
+        hex().forEach { append("&$it") }
     }
 
-    fun minified(): String {
-        return if (isExactCode) "$COLOR_CHAR$colorCode" else hexMojang()
-    }
+    fun minified(): String = if (isExactCode) "$COLOR_CHAR$colorCode" else hexMojang()
 }

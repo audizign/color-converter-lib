@@ -1,12 +1,14 @@
-package dev.idot.colorparser.lib
+package dev.idot.text.color
 
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.ItemMeta
 import java.io.File
 import kotlin.math.roundToInt
 
+// this could be handled better
 var COLORS_JSON: File = File("./colors.json")
 var USE_COLORS_FROM_FILE = false
+    private set
     get() = field && COLORS_JSON.exists()
 
 const val COLOR_CHAR = '\u00a7'
@@ -45,7 +47,6 @@ fun String.parseColorCodes(colorChar: Char = '&'): String {
                 }
                 result
             }
-
             14 -> hex.replace(colorChar, COLOR_CHAR)
             else -> hex
         }
@@ -148,7 +149,7 @@ fun String.gradient(start: Color, end: Color, formatChars: CharSequence = "&"): 
     return result.toString()
 }
 
-/*
+/* i got lazy
 fun String.parseGradientColors(vararg colors: Color, formatChars: CharSequence = "&"): String {
     val sb = StringBuilder(this.length * 14)
     val split = this.stripFormatCodes().chunked(this.length / colors.size)
@@ -163,8 +164,7 @@ fun String.compressColors(): String {
     val matches = mojangRegex.findAll(this).toList()
     if (matches.isEmpty()) return this
 
-    val result = StringBuilder(this.length)
-    result.append(this.substring(0, matches.first().range.first))
+    val result = StringBuilder(length).append(substring(0, matches.first().range.first))
 
     var lastColor = ""
     var lastFormats = BooleanArray(6)
@@ -172,7 +172,7 @@ fun String.compressColors(): String {
 
     for (i in matches.indices) {
         val match = matches[i]
-        val text = this.substring(match.range.last + 1..<(matches.getOrNull(i + 1)?.range?.first ?: this.length))
+        val text = substring(match.range.last + 1..<(matches.getOrNull(i + 1)?.range?.first ?: length))
 
         sift.add(match.value)
         if (i != matches.lastIndex) {
@@ -221,20 +221,17 @@ fun String.compressColors(): String {
     return result.toString()
 }
 
-fun String.parseAllColors(compress: Boolean = false): String =
-    parseCmiGradient()
-        .parseCmiColors()
-        .parseHexColors()
-        .parseColorCodes()
-        .let { if (compress) it.compressColors() else it }
+fun String.parseAllColors(compress: Boolean = false): String = parseCmiGradient()
+    .parseCmiColors()
+    .parseHexColors()
+    .parseColorCodes()
+    .let { if (compress) it.compressColors() else it }
 
-fun ItemStack.parseAllColors(compress: Boolean = false): ItemStack {
-    return apply {
-        itemMeta = itemMeta?.apply {
-            setLocalizedName(localizedName.parseAllColors(compress))
-            setDisplayName(displayName.parseAllColors(compress))
-            lore = lore?.map { it.parseAllColors(compress) }
-        }
+fun ItemStack.parseAllColors(compress: Boolean = false): ItemStack = apply {
+    itemMeta = itemMeta?.apply {
+        setLocalizedName(localizedName.parseAllColors(compress))
+        setDisplayName(displayName.parseAllColors(compress))
+        lore = lore?.map { it.parseAllColors(compress) }
     }
 }
 
@@ -263,8 +260,6 @@ fun String.findMojangColor(): Color? {
 @Deprecated("Inefficient, not recommended for production use.")
 @Throws(IllegalArgumentException::class)
 fun bruteForce(string: String): Color? {
-    return (
-        mojangColorRegex.find(
-            string.parseCmiColors().parseHexColors().parseColorCodes()
-        )?.value ?: return null).findMojangColor()
+    return (mojangColorRegex.find(string.parseCmiColors().parseHexColors().parseColorCodes())?.value ?: return null)
+        .findMojangColor()
 }
