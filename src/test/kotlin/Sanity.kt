@@ -1,11 +1,11 @@
-import dev.idot.text.color.parseAllColors
+import dev.idot.text.color.convertAllColors
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class Sanity {
 
     private fun parseEquals(input: String, expect: String, message: String? = null) {
-        assertEquals(expect, input.parseAllColors(true), message)
+        assertEquals(expect, input.convertAllColors(true), message)
     }
 
     @Test
