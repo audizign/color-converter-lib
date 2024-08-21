@@ -91,5 +91,5 @@ class Color {
         hex().forEach { append("&$it") }
     }
 
-    fun minified(): String = if (isExactCode) "$COLOR_CHAR$colorCode" else hexMojang()
+    fun minify(): String = if (isExactCode) "$COLOR_CHAR$colorCode" else hexMojang()
 }

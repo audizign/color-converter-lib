@@ -35,49 +35,43 @@ fun formatRegex(c: Char = '&') = Regex("[$COLOR_CHAR$c][k-or]", RegexOption.IGNO
 
 fun String.stripFormatCodes(): String = formatRegex().replace(this, "")
 
-fun String.parseColorCodes(colorChar: Char = '&'): String {
-    return bukkitRegex(colorChar).replace(this) {
-        val hex = it.value
+fun String.convertColorCodes(colorChar: Char = '&'): String = bukkitRegex(colorChar).replace(this) {
+    val hex = it.value
+    when (hex.length) {
+        8 -> {
+            val result = StringBuilder(14).append(COLOR_CHAR).append("x")
+            for (c in hex.drop(3).replace(colorChar.toString(), "")) {
+                result.append(COLOR_CHAR).append(c).append(COLOR_CHAR).append(c)
+            }
+            result
+        }
+        14 -> hex.replace(colorChar, COLOR_CHAR)
+        else -> hex
+    }
+}.replace(codeRegex(colorChar), "$COLOR_CHAR$1")
+
+fun String.convertHexColors(colorChar: Char = '&'): String = hexRegex(colorChar).replace(this) {
+    val result = StringBuilder(14).append(COLOR_CHAR).append("x")
+    val hex = it.groupValues[1]
+    for (c in hex) {
         when (hex.length) {
-            8 -> {
-                val result = StringBuilder(14).append(COLOR_CHAR).append("x")
-                for (c in hex.drop(3).replace(colorChar.toString(), "")) {
-                    result.append(COLOR_CHAR).append(c).append(COLOR_CHAR).append(c)
-                }
-                result
-            }
-            14 -> hex.replace(colorChar, COLOR_CHAR)
-            else -> hex
+            3 -> result.append(COLOR_CHAR).append(c).append(COLOR_CHAR).append(c)
+            6 -> result.append(COLOR_CHAR).append(c)
+            else -> return@replace it.value
         }
-    }.replace(codeRegex(colorChar), "$COLOR_CHAR$1")
-}
-
-fun String.parseHexColors(colorChar: Char = '&'): String {
-    return hexRegex(colorChar).replace(this) {
-        val result = StringBuilder(14).append(COLOR_CHAR).append("x")
-        val hex = it.groupValues[1]
-        for (c in hex) {
-            when (hex.length) {
-                3 -> result.append(COLOR_CHAR).append(c).append(COLOR_CHAR).append(c)
-                6 -> result.append(COLOR_CHAR).append(c)
-                else -> return@replace it.value
-            }
-        }
-        result
     }
+    result
 }
 
-fun String.parseCmiColors(): String {
-    return cmiColorRegex.replace(this) {
-        it.groupValues[1].findHexColor()?.minified() ?: it.value
-    }
+fun String.convertCmiColors(): String = cmiColorRegex.replace(this) {
+    it.groupValues[1].findHexColor()?.minify() ?: it.value
 }
 
-fun String.parseCmiGradient(): String {
+fun String.convertCmiGradient(): String {
     val separated = cmiSeparatorRegex.replace(this) { match ->
         val hexCode = match.groupValues[1].findHexColor()?.hex() ?: return@replace match.value
         val format = BooleanArray(6)
-        val matches = formatRegex().findAll(this.substring(0, match.range.first)).toList()
+        val matches = formatRegex().findAll(substring(0, match.range.first)).toList()
         for (i in matches.indices.reversed()) {
             val f = matches[i].value[1].lowercaseChar()
             if (f == 'r') break
@@ -105,27 +99,25 @@ fun String.parseCmiGradient(): String {
 }
 
 fun String.gradient(start: Color, end: Color, formatChars: CharSequence = "&"): String {
-    if (this.isBlank()) return end.hexMojang() + this
+    if (isBlank()) return end.hexMojang() + this
     if (start == end) return start.hexMojang() + this
-    if (this.length < 2) return start.hexMojang() + this + end.hexMojang()
+    if (length < 2) return start.hexMojang() + this + end.hexMojang()
 
     val strippedLength = this.stripFormatCodes().length
     val factor = 1.0 / (strippedLength - 1)
-    val colorDiff = Triple(
-        (end.red - start.red) * factor,
-        (end.green - start.green) * factor,
-        (end.blue - start.blue) * factor
-    )
+    val redDiff = (end.red - start.red) * factor
+    val greenDiff = (end.green - start.green) * factor
+    val blueDiff = (end.blue - start.blue) * factor
 
     val formatRegex = formatRegex()
-    val result = StringBuilder(this.length * 14 + (this.length - strippedLength) * 2)
+    val result = StringBuilder(length * 14 + (length - strippedLength) * 2)
     var format = ""
     var textIndex = 0
     var gradientIndex = 0
-    while (textIndex < this.length) {
+    while (textIndex < length) {
         val char = this[textIndex]
-        if (char in "$COLOR_CHAR$formatChars" && textIndex < this.length - 1) {
-            val potentialFormat = this.substring(textIndex, textIndex + 2)
+        if (char in "$COLOR_CHAR$formatChars" && textIndex < length - 1) {
+            val potentialFormat = substring(textIndex, textIndex + 2)
             if (formatRegex.matches(potentialFormat)) {
                 format = if (potentialFormat[1] == 'r') "" else format + potentialFormat
                 textIndex += 2
@@ -135,10 +127,10 @@ fun String.gradient(start: Color, end: Color, formatChars: CharSequence = "&"): 
 
         if (!char.isWhitespace()) {
             val hexColor = Color(
-                (start.red + colorDiff.first * gradientIndex).roundToInt(),
-                (start.green + colorDiff.second * gradientIndex).roundToInt(),
-                (start.blue + colorDiff.third * gradientIndex).roundToInt()
-            ).minified()
+                (start.red + redDiff * gradientIndex).roundToInt(),
+                (start.green + greenDiff * gradientIndex).roundToInt(),
+                (start.blue + blueDiff * gradientIndex).roundToInt()
+            ).minify()
             result.append(hexColor).append(format)
         }
         result.append(char)
@@ -149,7 +141,7 @@ fun String.gradient(start: Color, end: Color, formatChars: CharSequence = "&"): 
 }
 
 /* i got lazy
-fun String.parseGradientColors(vararg colors: Color, formatChars: CharSequence = "&"): String {
+fun String.convertGradientColors(vararg colors: Color, formatChars: CharSequence = "&"): String {
     val sb = StringBuilder(this.length * 14)
     val split = this.stripFormatCodes().chunked(this.length / colors.size)
     for (i in 0..<colors.lastIndex) {
@@ -159,7 +151,7 @@ fun String.parseGradientColors(vararg colors: Color, formatChars: CharSequence =
 }
 */
 
-fun String.compressColors(): String {
+fun String.minifyColors(): String {
     val matches = mojangRegex.findAll(this).toList()
     if (matches.isEmpty()) return this
 
@@ -185,17 +177,18 @@ fun String.compressColors(): String {
 
         var newColor = ""
         val newFormats = BooleanArray(6)
-        for (j in sift.indices.reversed()) {
-            val c = sift[j][1]
-            if (c in 'k'..'o') newFormats[c - 'k'] = true
-            else {
-                when (c) {
-                    in '0'..'f', 'r' -> sift[j]
-                    'x' -> sift[j].findMojangColor()!!.minified()
-                    else -> "" // the regex makes it impossible to get here
-                }.let { if (lastColor != it) newColor = it }
-                break
+        for (s in sift.indices.reversed()) {
+            val c = sift[s][1].lowercaseChar()
+            if (c in 'k'..'o') {
+                newFormats[c - 'k'] = true
+                continue
             }
+            when (c) { // ew why does this have to be so ugly
+                in "0123456789abcdefr" -> sift[s]
+                'x' -> sift[s].findMojangColor()!!.minify()
+                else -> "" // the regex makes it impossible to get here
+            }.let { if (lastColor != it) newColor = it }
+            break
         }
         sift.clear()
 
@@ -220,38 +213,52 @@ fun String.compressColors(): String {
     return result.toString()
 }
 
-fun String.parseAllColors(compress: Boolean = false): String = parseCmiGradient()
-    .parseCmiColors()
-    .parseHexColors()
-    .parseColorCodes()
-    .let { if (compress) it.compressColors() else it }
 
-fun ItemStack.parseAllColors(compress: Boolean = false): ItemStack = apply {
-    itemMeta = itemMeta?.apply {
-        setLocalizedName(localizedName.parseAllColors(compress))
-        setDisplayName(displayName.parseAllColors(compress))
-        lore = lore?.map { it.parseAllColors(compress) }
-    }
+
+fun String.convertAllColors(): String = convertCmiGradient()
+    .convertCmiColors()
+    .convertHexColors()
+    .convertColorCodes()
+
+fun String.convertAllColors(minify: Boolean): String =
+    convertAllColors().let { if (minify) it.minifyColors() else it }
+
+fun ItemStack.convertAllColors(): ItemStack = apply {
+    itemMeta?.convertAllColors()?.let { itemMeta = it }
 }
 
-fun ItemMeta.parseAllColors(compress: Boolean = false): ItemMeta {
-    setLocalizedName(localizedName.parseAllColors(compress))
-    setDisplayName(displayName.parseAllColors(compress))
-    lore = lore?.map { it.parseAllColors(compress) }
-    return this
+fun ItemStack.convertAllColors(minify: Boolean = false): ItemStack = apply {
+    itemMeta?.convertAllColors(minify)?.let { itemMeta = it }
+}
+
+fun ItemMeta.convertAllColors(): ItemMeta = apply {
+    setLocalizedName(localizedName.convertAllColors())
+    setDisplayName(displayName.convertAllColors())
+    lore = lore?.map { it.convertAllColors() }
+}
+
+fun ItemMeta.convertAllColors(minify: Boolean = false): ItemMeta = apply {
+    setLocalizedName(localizedName.convertAllColors(minify))
+    setDisplayName(displayName.convertAllColors(minify))
+    lore = lore?.map { it.convertAllColors(minify) }
 }
 
 fun String.findHexColor(): Color? {
-    val found = hexCodeRegex.find(this) ?: return null
-    return found.groupValues[1].let { hex ->
-        val formatted = if (hex.length == 3) buildString(6) { hex.forEach { append(it).append(it) } } else hex
-        formatted.toIntOrNull(16)?.let { Color(it) }
+    return (hexCodeRegex.find(this) ?: return null).groupValues[1].let { hex ->
+        val formatted = if (hex.length == 3) buildString {
+            append(hex[0]).append(hex[0])
+            append(hex[1]).append(hex[1])
+            append(hex[2]).append(hex[2])
+        } else hex
+        formatted.toIntOrNull(16)?.let(::Color)
     }
 }
 
+
+
 fun String.findMojangColor(): Color? {
     if (this.length == 2) return Color(this[1])
-    this.drop(3).split(COLOR_CHAR).joinToString("").let {
+    drop(3).split(COLOR_CHAR).joinToString("").let {
         return runCatching { Color(it.toInt(16)) }.getOrNull()
     }
 }
@@ -259,6 +266,6 @@ fun String.findMojangColor(): Color? {
 @Deprecated("Inefficient, not recommended for production use.")
 @Throws(IllegalArgumentException::class)
 fun bruteForce(string: String): Color? {
-    return (mojangColorRegex.find(string.parseCmiColors().parseHexColors().parseColorCodes())?.value ?: return null)
+    return (mojangColorRegex.find(string.convertCmiColors().convertHexColors().convertColorCodes())?.value ?: return null)
         .findMojangColor()
 }
