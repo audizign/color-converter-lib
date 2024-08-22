@@ -1,101 +1,101 @@
-import dev.idot.text.color.convertAllColors
+import dev.idot.text.color.convertColors
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class Sanity {
 
-    private fun parseEquals(input: String, expect: String, message: String? = null) {
-        assertEquals(expect, input.convertAllColors(true), message)
+    private fun compare(input: String, expect: String, message: String? = null) {
+        assertEquals(expect, input.convertColors(true), message)
     }
 
     @Test
     fun colorCode0() {
-        parseEquals("&0", "§0")
-        parseEquals("&1", "§1")
-        parseEquals("&2", "§2")
-        parseEquals("&3", "§3")
-        parseEquals("&4", "§4")
-        parseEquals("&5", "§5")
-        parseEquals("&6", "§6")
-        parseEquals("&7", "§7")
-        parseEquals("&8", "§8")
-        parseEquals("&9", "§9")
-        parseEquals("&a", "§a")
-        parseEquals("&b", "§b")
-        parseEquals("&c", "§c")
-        parseEquals("&d", "§d")
-        parseEquals("&e", "§e")
-        parseEquals("&f", "§f")
-        parseEquals("&k", "§k")
-        parseEquals("&l", "§l")
-        parseEquals("&m", "§m")
-        parseEquals("&n", "§n")
-        parseEquals("&o", "§o")
-        parseEquals("&r", "§r")
-        parseEquals("&0&z", "§0&z")
+        compare("&0", "§0")
+        compare("&1", "§1")
+        compare("&2", "§2")
+        compare("&3", "§3")
+        compare("&4", "§4")
+        compare("&5", "§5")
+        compare("&6", "§6")
+        compare("&7", "§7")
+        compare("&8", "§8")
+        compare("&9", "§9")
+        compare("&a", "§a")
+        compare("&b", "§b")
+        compare("&c", "§c")
+        compare("&d", "§d")
+        compare("&e", "§e")
+        compare("&f", "§f")
+        compare("&k", "§k")
+        compare("&l", "§l")
+        compare("&m", "§m")
+        compare("&n", "§n")
+        compare("&o", "§o")
+        compare("&r", "§r")
+        compare("&0&z", "§0&z")
     }
 
     @Test
     fun colorCode1() {
-        parseEquals("&0§k", "§0§k")
-        parseEquals("&0&k", "§0§k")
-        parseEquals("&0§l", "§0§l")
-        parseEquals("&0&l", "§0§l")
-        parseEquals("&0§m", "§0§m")
-        parseEquals("&0&m", "§0§m")
-        parseEquals("&0§n", "§0§n")
-        parseEquals("&0&n", "§0§n")
-        parseEquals("&0§o", "§0§o")
-        parseEquals("&0&o", "§0§o")
+        compare("&0§k", "§0§k")
+        compare("&0&k", "§0§k")
+        compare("&0§l", "§0§l")
+        compare("&0&l", "§0§l")
+        compare("&0§m", "§0§m")
+        compare("&0&m", "§0§m")
+        compare("&0§n", "§0§n")
+        compare("&0&n", "§0§n")
+        compare("&0§o", "§0§o")
+        compare("&0&o", "§0§o")
     }
 
     @Test
     fun colorCode2(){
-        parseEquals("&0   a   &0a", "§0   a   a")
-        parseEquals("&0   a  &l &0a", "§0   a   a")
+        compare("&0   a   &0a", "§0   a   a")
+        compare("&0   a  &l &0a", "§0   a   a")
     }
 
     @Test
     fun colorCode3() {
-        parseEquals("&0&l&m&n-&l&m&n-", "§0§l§m§n--")
-        parseEquals("&0&l&m&n-&l&m&n-&r", "§0§l§m§n--§r")
-        parseEquals("&0&l&n-&l&m&n-", "§0§l§n-§m-")
+        compare("&0&l&m&n-&l&m&n-", "§0§l§m§n--")
+        compare("&0&l&m&n-&l&m&n-&r", "§0§l§m§n--§r")
+        compare("&0&l&n-&l&m&n-", "§0§l§n-§m-")
     }
 
     @Test
     fun bukkitHexCode0() {
-        parseEquals("&x&0&0&0", "§0")
-        parseEquals("&x&1&2&3", "§x§1§1§2§2§3§3")
-        parseEquals("&x&1&2&3&4&5", "§5")
-        parseEquals("§x§1§2§3§4§5", "§x§5")
-        parseEquals("&x&1&2&3&4&5&6", "§x§1§2§3§4§5§6")
-        parseEquals("&x&1&2&3&4&5&6&7", "§7")
-        parseEquals("&x&1&2&3 &x&4&5&6test", " §x§4§4§5§5§6§6test")
+        compare("&x&0&0&0", "§0")
+        compare("&x&1&2&3", "§x§1§1§2§2§3§3")
+        compare("&x&1&2&3&4&5", "§5")
+        compare("§x§1§2§3§4§5", "§x§5")
+        compare("&x&1&2&3&4&5&6", "§x§1§2§3§4§5§6")
+        compare("&x&1&2&3&4&5&6&7", "§7")
+        compare("&x&1&2&3 &x&4&5&6test", " §x§4§4§5§5§6§6test")
     }
 
     @Test
     fun ampHexCode0() {
-        parseEquals("&#000", "§0")
-        parseEquals("&#123", "§x§1§1§2§2§3§3")
-        parseEquals("&#12345", "§x§1§1§2§2§3§345")
-        parseEquals("&#123456", "§x§1§2§3§4§5§6")
-        parseEquals("&#123 &#456test", " §x§4§4§5§5§6§6test")
+        compare("&#000", "§0")
+        compare("&#123", "§x§1§1§2§2§3§3")
+        compare("&#12345", "§x§1§1§2§2§3§345")
+        compare("&#123456", "§x§1§2§3§4§5§6")
+        compare("&#123 &#456test", " §x§4§4§5§5§6§6test")
     }
 
     @Test
     fun cmiHexCode0() {
-        parseEquals("{#000}", "§0")
-        parseEquals("{#123}", "§x§1§1§2§2§3§3")
-        parseEquals("{#12345}", "{#12345}")
-        parseEquals("{#123456}", "§x§1§2§3§4§5§6")
-        parseEquals("{#123} {#456}test", " §x§4§4§5§5§6§6test")
+        compare("{#000}", "§0")
+        compare("{#123}", "§x§1§1§2§2§3§3")
+        compare("{#12345}", "{#12345}")
+        compare("{#123456}", "§x§1§2§3§4§5§6")
+        compare("{#123} {#456}test", " §x§4§4§5§5§6§6test")
     }
 
     @Test
     fun cmiGradient0() {
-        parseEquals("{#000>}{#fff<}", "§f")
-        parseEquals("{#000>}a{#fff<}", "§0a§f")
-        parseEquals("{#white>}aaaa{#fff<}", "§faaaa")
+        compare("{#000>}{#fff<}", "§f")
+        compare("{#000>}a{#fff<}", "§0a§f")
+        compare("{#white>}aaaa{#fff<}", "§faaaa")
     }
 
     @Test
@@ -114,7 +114,7 @@ class Sanity {
             "§x§d§d§d§d§d§d§kl" +
             "§x§e§e§e§e§e§e§k§ld" +
             "§f§k§l!"
-        parseEquals("{#000>}He&allo   &kWorl&ld!{#fff<}", expect)
+        compare("{#000>}He&allo   &kWorl&ld!{#fff<}", expect)
     }
 
     @Test
@@ -133,7 +133,7 @@ class Sanity {
             "§x§d§d§d§d§d§dd" +
             "§x§e§e§e§e§e§ee" +
             "§ff"
-        parseEquals("{#black>}01234&6   abcdef{#ffffff<}", expect)
+        compare("{#black>}01234&6   abcdef{#ffffff<}", expect)
     }
 
     @Test
@@ -151,7 +151,7 @@ class Sanity {
             "§x§d§1§d§1§f§f}" +
             "§x§e§8§e§8§f§fa" +
             "§fa"
-        parseEquals("{#blue>}aa{#res<>}aa{#white<}", expect)
+        compare("{#blue>}aa{#res<>}aa{#white<}", expect)
     }
 
     @Test
@@ -172,52 +172,52 @@ class Sanity {
             "§x§e§7§b§6§e§7§k§l§m§n§o-" +
             "§x§f§3§d§b§f§3-" +
             "§f-"
-        parseEquals("{#black>}--&l--&m--&n--{#a0a<>}--&o--&k--&r--{#white<}", expect)
+        compare("{#black>}--&l--&m--&n--{#a0a<>}--&o--&k--&r--{#white<}", expect)
     }
 
     @Test
     fun optimize0() {
-        parseEquals("&x&0&0&0&0&0&0", "§0")
-        parseEquals("&x&0&0&0&0&a&a", "§1")
-        parseEquals("&x&0&0&a&a&0&0", "§2")
-        parseEquals("&x&0&0&a&a&a&a", "§3")
-        parseEquals("&x&a&a&0&0&0&0", "§4")
-        parseEquals("&x&a&a&0&0&a&a", "§5")
-        parseEquals("&x&f&f&a&a&0&0", "§6")
-        parseEquals("&x&a&a&a&a&a&a", "§7")
-        parseEquals("&x&5&5&5&5&5&5", "§8")
-        parseEquals("&x&5&5&5&5&f&f", "§9")
-        parseEquals("&x&5&5&f&f&5&5", "§a")
-        parseEquals("&x&5&5&f&f&f&f", "§b")
-        parseEquals("&x&f&f&5&5&5&5", "§c")
-        parseEquals("&x&f&f&5&5&f&f", "§d")
-        parseEquals("&x&f&f&f&f&5&5", "§e")
-        parseEquals("&x&f&f&f&f&f&f", "§f")
+        compare("&x&0&0&0&0&0&0", "§0")
+        compare("&x&0&0&0&0&a&a", "§1")
+        compare("&x&0&0&a&a&0&0", "§2")
+        compare("&x&0&0&a&a&a&a", "§3")
+        compare("&x&a&a&0&0&0&0", "§4")
+        compare("&x&a&a&0&0&a&a", "§5")
+        compare("&x&f&f&a&a&0&0", "§6")
+        compare("&x&a&a&a&a&a&a", "§7")
+        compare("&x&5&5&5&5&5&5", "§8")
+        compare("&x&5&5&5&5&f&f", "§9")
+        compare("&x&5&5&f&f&5&5", "§a")
+        compare("&x&5&5&f&f&f&f", "§b")
+        compare("&x&f&f&5&5&5&5", "§c")
+        compare("&x&f&f&5&5&f&f", "§d")
+        compare("&x&f&f&f&f&5&5", "§e")
+        compare("&x&f&f&f&f&f&f", "§f")
     }
 
     @Test
     fun optimize1() {
-        parseEquals("&0&1", "§1")
-        parseEquals("&0text&1text&0text&1", "§0text§1text§0text§1")
-        parseEquals("&0&1&2&3&4&5&6&7&8&9&a&b&c&d&e&f&k&l&m&n&o&r", "§r")
-        parseEquals("&0&1&2&3&4&5&6&7&8&9&a&b&c&d&e&f&k&l&m&n&o&rtext", "§rtext")
+        compare("&0&1", "§1")
+        compare("&0text&1text&0text&1", "§0text§1text§0text§1")
+        compare("&0&1&2&3&4&5&6&7&8&9&a&b&c&d&e&f&k&l&m&n&o&r", "§r")
+        compare("&0&1&2&3&4&5&6&7&8&9&a&b&c&d&e&f&k&l&m&n&o&rtext", "§rtext")
     }
 
     @Test
     fun optimize2() {
         val expect = "§0texttext"
-        parseEquals("&0text&0text", expect)
-        parseEquals("&0text&l&0text", expect)
-        parseEquals("&0text&0&ltext", "§0text§ltext")
+        compare("&0text&0text", expect)
+        compare("&0text&l&0text", expect)
+        compare("&0text&0&ltext", "§0text§ltext")
     }
 
     @Test
     fun optimize3() {
         val expect = "§1text"
-        parseEquals("&0&1text", expect)
-        parseEquals("&0&l&1text", expect)
+        compare("&0&1text", expect)
+        compare("&0&l&1text", expect)
 
-        parseEquals("&0&1&ltext", "§1§ltext")
+        compare("&0&1&ltext", "§1§ltext")
     }
 
 }
