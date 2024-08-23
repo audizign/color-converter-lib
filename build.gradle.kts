@@ -1,6 +1,3 @@
-import org.gradle.api.publish.maven.MavenPublication
-import org.gradle.api.tasks.bundling.Jar
-
 plugins {
     kotlin("jvm") version "1.9.24"
     application
@@ -9,7 +6,7 @@ plugins {
 
 val mcVersion = "1.16"
 group = "dev.idot"
-version = "1.1"
+version = "1.2"
 
 fun RepositoryHandler.local() {
     maven(file("X:/AppData/Maven/repository"))
@@ -52,9 +49,17 @@ publishing {
         local()
     }
 }
-
-tasks.test {
-    //filter.excludeTestsMatching("Benchmark")
+tasks {
+    processResources {
+        filesMatching("example.gradle.kts") {
+            expand(
+                "version" to version
+            )
+        }
+    }
+    test {
+        filter.excludeTestsMatching("Benchmark")
+    }
 }
 
 kotlin {

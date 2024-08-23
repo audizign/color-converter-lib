@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "dev.idot"
-version = "1.1"
+version = "${version}"
 
 repositories {
     mavenLocal()

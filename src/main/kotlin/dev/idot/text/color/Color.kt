@@ -2,8 +2,9 @@ package dev.idot.text.color
 
 class Color {
     companion object {
+        // some things just dont need comments
         /**
-         * return the closest named color in [Colors] to this color
+         * @return the closest named [Color] in [Colors] to this [Color]
          */
         fun Color.closestNamed(): Colors {
             var distance = 0x7FFFFFFF
@@ -19,9 +20,8 @@ class Color {
         }
 
         /**
-         * Convert a hex color string to a [Color] object
          * If you want to throw an exception on invalid input, use [Color] constructor instead
-         * @return a [Color] object or null if the string is not a valid hex color
+         * @return a [Color] or null if the [String] is not a valid hex color
          */
         fun String.colorFromHex(): Color? {
             return try { Color(this) } catch (ex: IllegalArgumentException) { return null }
@@ -29,7 +29,7 @@ class Color {
 
         fun String.findMojangColor(): Color? {
             if (this.length == 2) return Color(this[1])
-            drop(3).split(COLOR_DELIM).joinToString("").let {
+            drop(3).split(MC_COLOR_DELIM).joinToString("").let {
                 return runCatching { Color(it.toInt(16)) }.getOrNull()
             }
         }
@@ -87,6 +87,7 @@ class Color {
         this.rgb = (red.coerceIn(0, 255) shl 16) + (green.coerceIn(0, 255) shl 8) + blue.coerceIn(0, 255)
     }
 
+    @Throws(IllegalArgumentException::class)
     constructor(value: String) {
         val match = hexColorRegex.find(value) ?: throw IllegalArgumentException("Invalid hex code: $value")
         match.groupValues[1].let { hex ->
@@ -104,21 +105,28 @@ class Color {
         return r*r + g*g + b*b
     }
 
+    /**
+     * @return the hex representation as "RRGGBB"
+     */
     fun hex(): String = "%06X".format(rgb).lowercase()
 
+    /**
+     * @return the hex representation as "§x§R§R§G§G§B§B"
+     */
     fun hexMojang(): String = buildString {
-        append(COLOR_DELIM)
-        append("x")
+        append(MC_COLOR_DELIM).append("x")
         hex().forEach {
-            append(COLOR_DELIM)
-            append(it)
+            append(MC_COLOR_DELIM).append(it)
         }
     }.lowercase()
 
-    fun hexBukkit(): String = buildString {
+    fun hexBukkit(): String = buildString(14) {
         append("&x")
-        hex().forEach { append("&$it") }
+        hex().forEach { append("&").append(it) }
     }
 
-    fun minify(): String = if (isExactCode) "$COLOR_DELIM$colorCode" else hexMojang()
+    /**
+     * @return the smallest [String] representation as either a color code ("§C") or hex code ("§x§R§R§G§G§B§B")
+     */
+    fun minify(): String = if (isExactCode) "$MC_COLOR_DELIM$colorCode" else hexMojang()
 }
