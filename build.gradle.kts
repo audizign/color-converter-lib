@@ -6,7 +6,7 @@ plugins {
 
 val mcVersion = "1.16"
 group = "dev.idot"
-version = "1.2"
+version = "1.4"
 
 fun RepositoryHandler.local() {
     maven(file("X:/AppData/Maven/repository"))
@@ -50,13 +50,6 @@ publishing {
     }
 }
 tasks {
-    processResources {
-        filesMatching("example.gradle.kts") {
-            expand(
-                "version" to version
-            )
-        }
-    }
     test {
         filter.excludeTestsMatching("Benchmark")
     }

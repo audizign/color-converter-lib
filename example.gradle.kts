@@ -3,15 +3,15 @@ plugins {
     id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
-group = "dev.idot"
-version = "${version}"
+group = "your.group"
+version = "0.1"
 
 repositories {
     mavenLocal()
 }
 
 dependencies {
-    implementation("dev.idot:color-converter-lib:0.2")
+    implementation("dev.idot:color-converter-lib:1.4")
 }
 
 tasks {

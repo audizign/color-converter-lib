@@ -2,50 +2,102 @@ package dev.idot.text.color
 
 class Color {
     companion object {
-        // some things just dont need comments
         /**
-         * @return the closest named [Color] in [Colors] to this [Color]
-         */
-        fun Color.closestNamed(): Colors {
-            var distance = 0x7FFFFFFF
-            var closest: Colors? = null
-            for (key in Colors.entries) {
-                val d = this.distance(key())
-                if (d >= distance) continue
-                distance = d
-                closest = key
-                if (distance == 0) break
-            }
-            return closest!!
-        }
-
-        /**
-         * If you want to throw an exception on invalid input, use [Color] constructor instead
-         * @return a [Color] or null if the [String] is not a valid hex color
+         * A shorthand for [Color] constructor, but it returns null on invalid input
+         * @return the [Color]? of a [String]; null if invalid
          */
         fun String.colorFromHex(): Color? {
-            return try { Color(this) } catch (ex: IllegalArgumentException) { return null }
+            return try {
+                Color(this)
+            } catch (ex: IllegalArgumentException) {
+                null
+            }
         }
 
+        /**
+         * @return the [Color]? of a mojang color code ("§x§R§R§G§G§B§B")
+         */
         fun String.findMojangColor(): Color? {
-            if (this.length == 2) return Color(this[1])
+            if (length == 2) return Color(this[1])
             drop(3).split(MC_COLOR_DELIM).joinToString("").let {
                 return runCatching { Color(it.toInt(16)) }.getOrNull()
             }
         }
+
+        /**
+         * @return the hex code ("RRGGBB") of a [Color]
+         */
+        fun Color.hex(): String = "%06X".format(rgb).lowercase()
+
+        /**
+         * @return the mojang color code "§x§R§R§G§G§B§B" of a [Color]
+         */
+        fun Color.hexMojang(): String = buildString(14) {
+            append(MC_COLOR_DELIM).append("x")
+            for (c in hex()) {
+                append(MC_COLOR_DELIM).append(c)
+            }
+        }.lowercase()
+
+        /**
+         * @return the bukkit hex code ("&x&R&R&G&G&B&B") of a [Color]
+         */
+        fun Color.hexBukkit(): String = buildString(14) {
+            append("&x")
+            for (c in hex()) {
+                append("&").append(c)
+            }
+        }
+
+        /**
+         * @return the smallest [String] representation as either:
+         * - mojang color code ("§C")
+         * - mojang hex code ("§x§R§R§G§G§B§B")
+         */
+        fun Color.minify(): String =
+            if (isExactCode) "$MC_COLOR_DELIM${colorCode.code}" // ugh
+            else hexMojang()
     }
 
-    private var _colorCode: Char? = null
-    val colorCode: Char
+    private var _colorName: Colors? = null
+    val colorName: Colors
         get() {
-            _colorCode?.let { return it }
+            _colorName?.let { return it }
+            var closest = Colors.WHITE
             var distance = 0x7FFFFFFF
-            var closest = 'f'
-            for (c in ColorCode.codes()) {
-                val d = distance(Color(c))
+            for (key in Colors.entries) {
+                val d = distance(key())
                 if (d >= distance) continue
                 distance = d
-                closest = c.lowercaseChar()
+                closest = key
+                if (distance == 0) {
+                    isExactName = true
+                    break
+                }
+            }
+            _colorName = closest
+            return closest
+        }
+
+    var isExactName = false
+        private set
+        get() {
+            if (_colorName == null) colorName
+            return field
+        }
+
+
+    private var _colorCode: Codes? = null
+    val colorCode: Codes
+        get() {
+            _colorCode?.let { return it }
+            var closest = Codes.WHITE
+            var distance = 0x7FFFFFFF
+            for (key in Codes.entries) {
+                val d = distance(key())
+                if (d >= distance) continue
+                distance = d
+                closest = key
                 if (d == 0) {
                     isExactCode = true
                     break
@@ -55,10 +107,10 @@ class Color {
             return closest
         }
 
-    var isExactCode: Boolean = false
+    var isExactCode = false
         private set
         get() {
-            if (!field) colorCode
+            if (_colorCode == null) colorCode
             return field
         }
 
@@ -76,11 +128,14 @@ class Color {
 
     @Throws(IllegalArgumentException::class)
     constructor(value: Char) {
-        val colorCode = ColorCode.entries.find { it.code == value.lowercaseChar() }
+        Codes.entries
+            .find { it.code == value.lowercaseChar() }
+            ?.let {
+                this.rgb = it.rgb
+                this._colorCode = it
+                this.isExactCode = true
+            }
             ?: throw IllegalArgumentException("Invalid color code: $value")
-        this.rgb = colorCode.rgb
-        this._colorCode = colorCode.code
-        this.isExactCode = true
     }
 
     constructor(red: Int, green: Int, blue: Int) {
@@ -89,12 +144,19 @@ class Color {
 
     @Throws(IllegalArgumentException::class)
     constructor(value: String) {
-        val match = hexColorRegex.find(value) ?: throw IllegalArgumentException("Invalid hex code: $value")
-        match.groupValues[1].let { hex ->
-            val formatted = if (hex.length == 3) buildString {
-                append(hex[0]).append(hex[0]).append(hex[1]).append(hex[1]).append(hex[2]).append(hex[2])
-            } else hex
-            this.rgb = formatted.toIntOrNull(16)?.let(::Color)!!.rgb
+        try {
+            val color = Colors(value)
+            this.rgb = color.rgb
+            this._colorName = color.colorName
+            this.isExactName = true
+        } catch (ex: NoSuchElementException) {
+            val match = hexColorRegex.find(value) ?: throw IllegalArgumentException("Invalid hex code: $value")
+            match.groupValues[1].let { hex ->
+                val formatted = if (hex.length == 3) buildString {
+                    append(hex[0]).append(hex[0]).append(hex[1]).append(hex[1]).append(hex[2]).append(hex[2])
+                } else hex
+                this.rgb = formatted.toIntOrNull(16)?.let(::Color)!!.rgb
+            }
         }
     }
 
@@ -104,29 +166,4 @@ class Color {
         val b = color.blue - blue
         return r*r + g*g + b*b
     }
-
-    /**
-     * @return the hex representation as "RRGGBB"
-     */
-    fun hex(): String = "%06X".format(rgb).lowercase()
-
-    /**
-     * @return the hex representation as "§x§R§R§G§G§B§B"
-     */
-    fun hexMojang(): String = buildString {
-        append(MC_COLOR_DELIM).append("x")
-        hex().forEach {
-            append(MC_COLOR_DELIM).append(it)
-        }
-    }.lowercase()
-
-    fun hexBukkit(): String = buildString(14) {
-        append("&x")
-        hex().forEach { append("&").append(it) }
-    }
-
-    /**
-     * @return the smallest [String] representation as either a color code ("§C") or hex code ("§x§R§R§G§G§B§B")
-     */
-    fun minify(): String = if (isExactCode) "$MC_COLOR_DELIM$colorCode" else hexMojang()
 }
