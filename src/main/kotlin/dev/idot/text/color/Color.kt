@@ -151,7 +151,7 @@ class Color {
             this._colorName = color.colorName
             this.isExactName = true
         } catch (ex: NoSuchElementException) {
-            val match = hexColorRegex.find(value) ?: throw IllegalArgumentException("Invalid hex code: $value")
+            val match = hexColorRegex.find(value) ?: throw IllegalArgumentException("Invalid color: $value")
             match.groupValues[1].let { hex ->
                 val formatted = if (hex.length == 3) buildString {
                     append(hex[0]).append(hex[0]).append(hex[1]).append(hex[1]).append(hex[2]).append(hex[2])
