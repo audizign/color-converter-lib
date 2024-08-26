@@ -54,9 +54,10 @@ class Color {
          * - mojang color code ("§C")
          * - mojang hex code ("§x§R§R§G§G§B§B")
          */
-        fun Color.minify(): String =
-            if (isExactCode) "$MC_COLOR_DELIM${colorCode.code}" // ugh
+        fun Color.minify(): String {
+            return if (isExactCode) "$MC_COLOR_DELIM${colorCode.code}" // ugh
             else hexMojang()
+        }
     }
 
     private var _colorName: Colors? = null
@@ -92,7 +93,7 @@ class Color {
         get() {
             _colorCode?.let { return it }
             var closest = Codes.WHITE
-            var distance = 0x7FFFFFFF
+            var distance = 0xFFFFFF
             for (key in Codes.entries) {
                 val d = distance(key())
                 if (d >= distance) continue
