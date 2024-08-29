@@ -6,14 +6,10 @@ plugins {
 
 val mcVersion = "1.16"
 group = "dev.idot"
-version = "1.5"
-
-fun RepositoryHandler.local() {
-    maven(file("X:/AppData/Maven/repository"))
-}
+version = "1.6"
 
 repositories {
-    local()
+    mavenLocal()
     mavenCentral()
 
     maven("https://oss.sonatype.org/content/repositories/public/")
@@ -44,9 +40,6 @@ publishing {
                 from(sourceSets["main"].allSource)
             }.get()
         )
-    }
-    repositories {
-        local()
     }
 }
 tasks {

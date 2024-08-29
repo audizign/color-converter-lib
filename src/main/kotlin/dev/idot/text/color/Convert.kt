@@ -7,9 +7,9 @@ import dev.idot.text.color.Color.Companion.hexMojang
 import dev.idot.text.color.Color.Companion.minify
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.ItemMeta
-import kotlin.text.RegexOption.IGNORE_CASE
 import java.io.File
 import kotlin.math.roundToInt
+import kotlin.text.RegexOption.IGNORE_CASE
 
 /**
  * So, I'm bad at naming things. But here's a quick rundown:
@@ -81,13 +81,13 @@ fun hexCodeRegex(delimiter: Char = COLOR_DELIM) =
  * @param delimiter the for color code
  * @return the [String] without any color codes ("&C") and hex codes ("&#RRGGBB" and "&#RGB")
  */
-fun String.stripColoring(delimiter: Char = COLOR_DELIM): String = apply {
+fun String.stripColoring(delimiter: Char = COLOR_DELIM): String =
     replace(cmiColorRegex, "")
-    replace(hexCodeRegex(delimiter), "")
-    replace(bukkitHexRegex(delimiter), "")
-    replace(colorCodeRegex(delimiter), "")
-    replace(mojangRegex, "")
-}
+        .replace(hexCodeRegex(delimiter), "")
+        .replace(bukkitHexRegex(delimiter), "")
+        .replace(colorCodeRegex(delimiter), "")
+        .replace(mojangRegex, "")
+
 
 fun Collection<String>.stripColoring() = map { it.stripColoring() }
 
@@ -95,7 +95,7 @@ fun Collection<String>.stripColoring() = map { it.stripColoring() }
  * @param delimiter for color code (default: [COLOR_DELIM])
  * @return the string without any format codes ("&k-o" and "&r")
  */
-fun String.stripFormatting(delimiter: Char = COLOR_DELIM) = formatCodeRegex(delimiter).replace(this, "")
+fun String.stripFormatting(delimiter: Char = COLOR_DELIM): String = formatCodeRegex(delimiter).replace(this, "")
 
 fun Collection<String>.stripFormatting() = map { it.stripFormatting() }
 
@@ -103,15 +103,14 @@ fun Collection<String>.stripFormatting() = map { it.stripFormatting() }
  * @param delimiter for color code (default: [COLOR_DELIM])
  * @return the [String] with all color codes ("&C") converted to mojang color codes ("§C")
  */
-fun String.convertColorCodes(delimiter: Char = COLOR_DELIM) = bukkitHexRegex(delimiter).replace(this) {
-    val hex = it.value
+fun String.convertColorCodes(delimiter: Char = COLOR_DELIM): String = replace(bukkitHexRegex(delimiter)) { match ->
+    val hex = match.value
     when (hex.length) {
-        8 -> {
-            val result = StringBuilder(14).append(MC_COLOR_DELIM).append("x")
-            for (c in hex.drop(3).replace(delimiter.toString(), "")) {
-                result.append(MC_COLOR_DELIM).append(c).append(MC_COLOR_DELIM).append(c)
+        8 -> StringBuilder(14).append(MC_COLOR_DELIM).append("x").apply {
+            for (c in hex.drop(3)) {
+                if (c == delimiter) continue
+                append(MC_COLOR_DELIM).append(c).append(MC_COLOR_DELIM).append(c)
             }
-            result
         }
 
         14 -> hex.replace(delimiter, MC_COLOR_DELIM)
@@ -126,28 +125,35 @@ fun Collection<String>.convertColorCodes() = map { it.convertColorCodes() }
  * @return the [String] with all hex codes ("&amp;#RRGGBB" and "&amp;#RGB") converted
  * to mojang hex codes ("§x§R§R§G§G§B§B")
  */
-fun String.convertHexColors(delimiter: Char = COLOR_DELIM): String = hexCodeRegex(delimiter).replace(this) {
-    val result = StringBuilder(14).append(MC_COLOR_DELIM).append("x")
+fun String.convertHexCodes(delimiter: Char = COLOR_DELIM): String = replace(hexCodeRegex(delimiter)) {
     val hex = it.groupValues[1]
-    for (c in hex) {
-        when (hex.length) {
-            3 -> result.append(MC_COLOR_DELIM).append(c).append(MC_COLOR_DELIM).append(c)
-            6 -> result.append(MC_COLOR_DELIM).append(c)
-            else -> return@replace it.value
+    when (hex.length) {
+        3 -> StringBuilder(14).apply {
+            append(MC_COLOR_DELIM).append('x')
+            for (c in hex) {
+                append(MC_COLOR_DELIM).append(c).append(MC_COLOR_DELIM).append(c)
+            }
         }
+
+        6 -> StringBuilder(14).apply {
+            append(MC_COLOR_DELIM).append('x')
+            for (c in hex) {
+                append(MC_COLOR_DELIM).append(c)
+            }
+        }
+
+        else -> it.value
     }
-    result
 }
 
-fun Collection<String>.convertHexColors() = map { it.convertHexColors() }
+fun Collection<String>.convertHexCodes() = map { it.convertHexCodes() }
 
 /**
  * @return the [String] with all cmi color codes ("{#RRGGBB}", "{#RGB}" or "{#COLORNAME}") converted
- * to mojang color codes ("§x§R§R§G§G§B§B")
+ * to minified mojang color codes ("&C" or "§x§R§R§G§G§B§B")
  */
-fun String.convertCmiColors(): String = cmiColorRegex.replace(this) {
-    it.groupValues[1].colorFromHex()?.minify() ?: it.value
-}
+fun String.convertCmiColors(): String =
+    replace(cmiColorRegex) { it.groupValues[1].colorFromHex()?.minify() ?: it.value }
 
 fun Collection<String>.convertCmiColors() = map { it.convertCmiColors() }
 
@@ -155,33 +161,30 @@ fun Collection<String>.convertCmiColors() = map { it.convertCmiColors() }
  * @return the [String] with all cmi gradient codes ("{#color1>}{#color2<>}{#color3<}" etc.) converted
  * to mojang color codes ("§x§R§R§G§G§B§B")
  */
-fun String.convertCmiGradient(): String {
-    val separated = cmiSeparatorRegex.replace(this) { match ->
-        val hexCode = match.groupValues[1].colorFromHex()?.hex() ?: return@replace match.value
-        val format = BooleanArray(6)
-        val matches = formatCodeRegex().findAll(substring(0, match.range.first)).toList()
-        for (i in matches.indices.reversed()) {
-            val f = matches[i].value[1].lowercaseChar()
-            if (f == 'r') break
-            format[f - 'k'] = true
-        }
-
-        val result = StringBuilder(22 + format.size * 2).append("{#$hexCode<}{#$hexCode>}")
-        for (i in format.indices) {
-            if (format[i]) result.append(MC_COLOR_DELIM).append('k' + i)
-        }
-        result.toString()
+fun String.convertCmiGradient(): String = replace(cmiSeparatorRegex) { match ->
+    val hexCode = match.groupValues[1].colorFromHex()?.hex() ?: return@replace match.value
+    val format = BooleanArray(6)
+    val matches = formatCodeRegex().findAll(substring(0, match.range.first)).toList()
+    for (i in matches.indices.reversed()) { // reversed for proper sorting
+        val f = matches[i].value[1].lowercaseChar()
+        if (f == 'r') break
+        format[f - 'k'] = true
     }
-    return cmiGradientRegex.replace(separated) { result ->
-        val (start, text, end) = result.destructured
-        try {
-            text.gradient(
-                start.colorFromHex() ?: Colors(start),
-                end.colorFromHex() ?: Colors(end)
-            )
-        } catch (ex: Exception) {
-            result.value
+
+    StringBuilder(22 + format.size * 2).append("{#$hexCode<}{#$hexCode>}").apply {
+        for (i in format.indices) {
+            if (format[i]) append(MC_COLOR_DELIM).append('k' + i)
         }
+    }
+}.replace(cmiGradientRegex) { result ->
+    val (start, text, end) = result.destructured
+    try {
+        text.gradient(
+            start.colorFromHex() ?: Colors(start),
+            end.colorFromHex() ?: Colors(end)
+        )
+    } catch (ex: Exception) {
+        result.value
     }
 }
 
@@ -196,14 +199,14 @@ fun String.gradient(start: Color, end: Color, formatChar: Char = COLOR_DELIM): S
     if (start == end) return start.hexMojang() + this
     if (length < 2) return start.hexMojang() + this + end.hexMojang()
 
-    val strippedLength = stripFormatting().length
-    val factor = 1.0 / (strippedLength - 1)
+    val strippedLength = stripFormatting().lastIndex
+    val factor = 1.0 / (strippedLength)
     val redDiff = (end.red - start.red) * factor
     val greenDiff = (end.green - start.green) * factor
     val blueDiff = (end.blue - start.blue) * factor
 
     val formatRegex = formatCodeRegex()
-    val result = StringBuilder(length * 14 + (length - strippedLength) * 2)
+    val result = StringBuilder(length * 14 + (length - strippedLength + 1) * 2)
     var format = ""
     var textIndex = 0
     var gradientIndex = 0
@@ -323,7 +326,7 @@ fun String.minifyColors(): String {
  */
 fun String.convertColors(delimiter: Char = COLOR_DELIM) = convertCmiGradient()
     .convertCmiColors()
-    .convertHexColors(delimiter)
+    .convertHexCodes(delimiter)
     .convertColorCodes(delimiter)
 
 /**
